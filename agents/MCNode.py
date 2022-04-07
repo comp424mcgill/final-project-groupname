@@ -8,14 +8,16 @@ class MCNode():
     '''
     class for Monte Carlo Tree node
     '''
-    def __init__(self,chess_board, state, parent=None):
+    def __init__(self,chess_board, coord, barrier, parent=None):
             """
             Parameters
             ----------
-            state: coordinate
             visit: number of visits
+            coord: coordinates of current state
+            barrier: array of boolean of lenth = 4
             """
-            self.state = state
+            self.coord = coord
+            self.barrier = barrier
             self.chess_board = chess_board
             self.parent = parent
             self.children = []
@@ -24,12 +26,12 @@ class MCNode():
     def isLeaf(self):
         return (len(self.children) == 0)
 
+    '''
     def expand(self):
         # TODO:  possible leaf to expand, if cant expand return false
         return True
 
-    def find_area(self):
+    def area(self):
         # TODO: if cant expand(i.e. end of game), calc our area
-        return 0 
+        return 0 '''
     
-    # def best_child(self):
