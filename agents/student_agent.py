@@ -1,8 +1,10 @@
 # Student agent: Add your own agent here
+from mimetypes import init
 from agents.agent import Agent
 from store import register_agent
 import sys
-
+import time
+from node import Node
 
 @register_agent("student_agent")
 class StudentAgent(Agent):
@@ -31,10 +33,43 @@ class StudentAgent(Agent):
         - max_step: an integer
 
         You should return a tuple of ((x, y), dir),
-        where (x, y) is the next position of your agent and dir is the direction of the wall
-        you want to put on.
+        where (x, y) is the next position of your agent and dir is the direction of the wall you want to put on.
 
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
-        # dummy return
+
+
+
+
+        # TODO: dummy return
         return my_pos, self.dir_map["u"]
+
+
+    def buildMCTree(my_pos, adv_pos, max_time):
+        root = Node(my_pos)
+        end_time = time.time() + max_time
+        while (root.state != adv_pos and time.time() <= end_time):
+            if root.is_leaf:
+                root.expand()
+            else:
+                # TODO: above is pseudo
+                root.children.choose_max_area
+        # TODO: is this enough or we need a new class?
+        
+        return 0
+
+
+    def monteCarlo(chess_board, my_pos, adv_pos, max_step, max_time):
+        # time limit
+        start_time = time.time()
+
+        # simulation
+        for i in range(max_step):
+            if (time.time()-start_time) >= max_time:
+                # TODO
+                break
+            
+
+
+        
+        return 0
