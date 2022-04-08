@@ -1,10 +1,10 @@
-import imp
-from multiprocessing import Barrier
+
 import numpy as np
-from copy import deepcopy
 import time
 from sympy import root
 from agents.agent import Agent
+from random_agent import RandomAgent
+# TODO: use random agent as others
 from store import register_agent
 from MCNode import MCNode
 
@@ -94,29 +94,39 @@ class MCTree():
 
             return 0
         
-    def simulate_single(self):
-        success = False
-        x,y,_ = self.board_area.shape
 
-        reach_end, tmp =self.root.check_close_area()
-        if reach_end:
-            return tmp  # area
-        available_x, available_y = tmp
 
-        while not success:
-            other_x_next = np.random.randint(x)
-            other_y_next = np.random.randint(y)
-            other_b_next = np.random.randint(4)
+    def simulate(self, node):
+        def simulate_single(node, available_x, available_y):
+            success = False
+            x,y,_ = self.board_area.shape
 
-            i = np.random.randint(len(available_x))
-            x_next = available_x[i]
-            y_next = available_y[i]
-            b_next = np.random.randint(4)
+            while not success:
+                other_x_next = np.random.randint(x)
+                other_y_next = np.random.randint(y)
+                other_b_next = np.random.randint(4)
 
-            collision = (other_x_next==x_next) and (other_y_next==y_next)
-            barrier_setted = (self.set_barrier(other_x_next,other_y_next,other_b_next)) and (self.set_barrier(x_next,y_next,b_next))
-            if not collision and barrier_setted:
-                success = True
+                i = np.random.randint(len(available_x))
+                x_next = available_x[i]
+                y_next = available_y[i]
+                b_next = np.random.randint(4)
+
+                collision = (other_x_next==x_next) and (other_y_next==y_next)
+                barrier_setted = (self.set_barrier(other_x_next,other_y_next,other_b_next)) and (self.set_barrier(x_next,y_next,b_next))
+                if not collision and barrier_setted:
+                    success = True
+
+            next_node = MCNode(self.chess_board, (x_next,y_next), b_next, parent=node)
+            return next_node
+
+        # check if it is end of game
+        reach_end, tmp =node.check_close_area()
+        while not reach_end:
+            available_x, available_y = tmp
+            simulate_single(node, available_x, available_y)
+
+        area = tmp
+
 
     def backpopagation(self):
         return 0

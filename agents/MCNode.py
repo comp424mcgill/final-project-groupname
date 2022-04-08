@@ -9,7 +9,7 @@ class MCNode():
     '''
     class for Monte Carlo Tree node
     '''
-    def __init__(self,chess_board, coord, barrier, parent=None):
+    def __init__(self,chess_board, coord, barrier, parent=None, depth=0):
             """
             Parameters
             ----------
@@ -25,6 +25,7 @@ class MCNode():
             self.children = []
             self.visit = 0
             self.success = 0
+            self.depth = depth
 
     def isLeaf(self):
         return (len(self.children) == 0)
@@ -121,7 +122,7 @@ class MCNode():
             b = np.random.randint(4)
             while not self.set_barrier(x, y, b%4):
                 b += 1
-            child = MCNode(self.chess_board, (x,y), b, parent=self)
+            child = MCNode(self.chess_board, (x,y), b, parent=self, depth=self.depth+1)
             self.children += [child]
 
         return True 
