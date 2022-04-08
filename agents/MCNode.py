@@ -30,6 +30,11 @@ class MCNode():
     def isLeaf(self):
         return (len(self.children) == 0)
 
+    def add_visit(self): 
+        self.visit += 1
+    
+    def add_score(self, score): 
+        self.success += score
 
     def set_barrier(self, x, y, b):
         # same func as Tree

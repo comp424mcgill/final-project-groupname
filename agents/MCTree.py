@@ -4,7 +4,7 @@ import time
 from sympy import root
 from agents.agent import Agent
 from random_agent import RandomAgent
-# TODO: use random agent as others
+# TODO:  do i have to use random agent as others
 from store import register_agent
 from MCNode import MCNode
 
@@ -21,38 +21,6 @@ class MCTree():
             """
             self.chess_board = chess_board
             self.root = root
-
-    '''
-    def build_tree(self, max_time):
-        current_node = self.root
-        end_time = time.time() + max_time
-        while time.time() < end_time:
-            if current_node.isLeaf():
-                tmp = current_node.expand()
-                if not tmp:
-                    return current_node
-            else:
-                # TODO: above is pseudocode, add function
-                # or just end before else? but runtime will exceed
-                # do we have to make a guess on Area
-                current_node = current_node.childrenWithMaxArea()
-        return current_node
-
-    def search(self, max_time, max_step):
-        for i in range(max_step):
-            current_node = root
-            end_time = time.time() + max_time
-            if time.time() >= end_time:
-                # TODO: change break to return
-                break
-
-            while not (current_node.isLeaf()):
-                # TODO: above is pseudocode, add function
-                # or just end before else? but runtime will exceed
-                # do we have to make a guess on Area
-                current_node = current_node.childrenWithMaxArea()
-            # TODO: use node.visit() to avoid revisiting same coord'''
-
 
     def set_barrier(self, x, y, b):
         # same func as node
@@ -85,19 +53,11 @@ class MCTree():
     # selesction -> select root as current
 
     def expansion(self):
-        if not self.root.expand():
-            # TODO: reach end
-            '''
-            # above 3 lines is right but not in correct position
-            player_area = self.root.area()
-            board_area = self.board_area.shape[0] * self.board_area.shape[1]'''
-
-            return 0
-        
+        return self.root.expand()
 
 
-    def simulate(self, node):
-        def simulate_single(node, available_x, available_y):
+    def simulate(self, node=root):
+        def _simulate_single(node, available_x, available_y):
             success = False
             x,y,_ = self.board_area.shape
 
@@ -116,6 +76,7 @@ class MCTree():
                 if not collision and barrier_setted:
                     success = True
 
+            # not record it to the tree by not recoding children
             next_node = MCNode(self.chess_board, (x_next,y_next), b_next, parent=node)
             return next_node
 
@@ -123,14 +84,58 @@ class MCTree():
         reach_end, tmp =node.check_close_area()
         while not reach_end:
             available_x, available_y = tmp
-            simulate_single(node, available_x, available_y)
+            next_node = _simulate_single(node, available_x, available_y)
+            node = next_node
+            reach_end, tmp =node.check_close_area()
 
         area = tmp
+        return node, area
 
 
     def backpopagation(self):
-        return 0
+        # TODO: this is not exactly 100% success
+        node, area = self.simulate()
+        board_area = self.chess_board.shape[0] * self.chess_board.shape[1]
+        while node.parent != None:
+            node = node.parent
+            node.add_visit()
+            if area > (board_area/2):
+                node.add_score(1)
+            elif area == (board_area/2):
+                node.add_score(.5)
+        # this should end at root
 
+
+    def build_tree(self, max_time=30-2):
+        current_node = self.root
+        end_time = time.time() + max_time
+        while time.time() < end_time:
+            if current_node.isLeaf():
+                tmp = current_node.expand()
+                if not tmp:
+                    # TODO: no, not return
+                    return current_node
+            else:
+                # TODO: above is pseudocode, add function
+                # or just end before else? but runtime will exceed
+                # do we have to make a guess on Area
+                current_node = current_node.childrenWithMaxArea()
+        return current_node
+
+    def search(self, max_step, max_time=2):
+        for i in range(max_step):
+            current_node = root
+            end_time = time.time() + max_time
+            if time.time() >= end_time:
+                # TODO: change break to return
+                break
+
+            while not (current_node.isLeaf()):
+                # TODO: above is pseudocode, add function
+                # or just end before else? but runtime will exceed
+                # do we have to make a guess on Area
+                current_node = current_node.childrenWithMaxArea()
+            # TODO: use node.visit() to avoid revisiting same coord'''
 
 
 
