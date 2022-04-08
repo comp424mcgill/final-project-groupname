@@ -149,5 +149,5 @@ class MCNode():
         for i in self.children:
             score=i.success / i.visit +  np.sqrt( 2*np.log (self.visit) / i.visit)
             scores += score
-        sorted_children = [x for _,x in sorted(zip(scores, self.children))]
+        sorted_children = [x for _,x in sorted(zip(scores, self.children), reverse=True)]
         return sorted_children
