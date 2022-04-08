@@ -66,7 +66,9 @@ class MCTree():
     def expansion(self):
         if not self.root.expand():
             # TODO: reach end
-            '''player_area = self.root.area()
+            '''
+            # above 3 lines is right but not in correct position
+            player_area = self.root.area()
             board_area = self.board_area.shape[0] * self.board_area.shape[1]'''
 
             return 0
@@ -89,6 +91,7 @@ class MCTree():
                 success = True
 
         # NO. TODO: this is no correct as we may go over barrier and didnt notice we reach end
+        # also, haven't consider the confict of neighbor squares sharing a barrier
 
     def backpopagation(self):
         return 0
