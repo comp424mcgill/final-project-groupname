@@ -1,7 +1,6 @@
 
 import numpy as np
 import time
-from sympy import root
 from agents.agent import Agent
 from random_agent import RandomAgent
 # TODO:  do i have to use random agent as others
@@ -52,11 +51,10 @@ class MCTree():
 
     # selesction -> select root as current
 
-    def expansion(self):
-        return self.root.expand()
+    # expansion -> in node class
 
 
-    def simulate(self, node=root):
+    def simulate(self, node):
         def _simulate_single(node, available_x, available_y):
             success = False
             x,y,_ = self.board_area.shape
@@ -92,9 +90,10 @@ class MCTree():
         return node, area
 
 
-    def backpopagation(self):
+    def backpopagation(self, tree_node):
+        '''tree_node: starting node that stored in tree'''
         # TODO: this is not exactly 100% success
-        node, area = self.simulate()
+        node, area = self.simulate(tree_node)
         board_area = self.chess_board.shape[0] * self.chess_board.shape[1]
         while node.parent != None:
             node = node.parent
@@ -107,35 +106,40 @@ class MCTree():
 
 
     def build_tree(self, max_time=30-2):
-        current_node = self.root
-        end_time = time.time() + max_time
+        # manage our run time
+        node = self.root
+        start_time = time.time()
+        end_time = start_time + max_time
+
         while time.time() < end_time:
-            if current_node.isLeaf():
-                tmp = current_node.expand()
+            if node.isLeaf():
+                tmp = node.expand()
                 if not tmp:
-                    # TODO: no, not return
-                    return current_node
+                    return self.root
+                for child in node.children:
+                    self.backpopagation(child)
             else:
-                # TODO: above is pseudocode, add function
-                # or just end before else? but runtime will exceed
-                # do we have to make a guess on Area
-                current_node = current_node.childrenWithMaxArea()
-        return current_node
+                node = node.highest_child()
 
-    def search(self, max_step, max_time=2):
+        # TODO: this is just a check
+        print('tree building time: ', (time.time()-start_time))
+
+        return self.root
+
+
+    '''def search(self, max_step, max_time=2):
+        end_time = time.time() + max_time
+        node = self.root
         for i in range(max_step):
-            current_node = root
-            end_time = time.time() + max_time
             if time.time() >= end_time:
-                # TODO: change break to return
-                break
+                print('wuwu: search time exceeds')
+                return node
+            node = node.highest_child()'''
+        # search -> node.highest_child() ???TODO
+        
+            
 
-            while not (current_node.isLeaf()):
-                # TODO: above is pseudocode, add function
-                # or just end before else? but runtime will exceed
-                # do we have to make a guess on Area
-                current_node = current_node.childrenWithMaxArea()
-            # TODO: use node.visit() to avoid revisiting same coord'''
+           
 
 
 

@@ -10,22 +10,22 @@ class MCNode():
     class for Monte Carlo Tree node
     '''
     def __init__(self,chess_board, coord, barrier, parent=None, depth=0):
-            """
-            Parameters
-            ----------
-            visited: number of visiting
-            success: number of visiting which our palyer success
-            coord: coordinates of current state
-            barrier: array of boolean of lenth = 4
-            """
-            self.coord = coord
-            self.barrier = barrier
-            self.chess_board = chess_board
-            self.parent = parent
-            self.children = []
-            self.visit = 0
-            self.success = 0
-            self.depth = depth
+        """
+        Parameters
+        ----------
+        visited: number of visiting
+        success: number of visiting which our palyer success
+        coord: coordinates of current state
+        barrier: array of boolean of lenth = 4
+        """
+        self.coord = coord
+        self.barrier = barrier
+        self.chess_board = chess_board
+        self.parent = parent
+        self.children = []
+        self.visit = 0
+        self.success = 0
+        self.depth = depth
 
     def isLeaf(self):
         return (len(self.children) == 0)
@@ -115,14 +115,14 @@ class MCNode():
 
     # tree policy here, but i dont know what's that
     # so i just put default policy(random generate)
-    def expand(self, num_children=6):
+    def expand(self, num_children=50):
         # possible leaf to expand, if cant expand return false
         reach_end, tmp = self.check_close_area()
         if reach_end:
             return False
         available_x, available_y = tmp
 
-        for i in np.random.randint(0, len(available_x), 6):
+        for i in np.random.randint(0, len(available_x), min(len(available_x),num_children)):
             x,y = available_x[i], available_y[i]
             b = np.random.randint(4)
             while not self.set_barrier(x, y, b%4):
@@ -132,4 +132,14 @@ class MCNode():
 
         return True 
 
-        
+    def highest_child(self):
+        highest_score = 0
+        highest_child = self
+        for child in self.children:
+            if child.visit == 0:
+                continue
+            child_score = child.success/child.visit
+            if child_score > highest_score:
+                highest_score = child.score
+                highest_child = child
+        return highest_child
