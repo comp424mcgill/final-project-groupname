@@ -51,7 +51,7 @@ class MCTree():
 
 
     def simulate(self, node):
-        def _simulate_single(node, available_x, available_y):
+        def _simulate_single(node, available_pos):
             success = False
             x,y,_ = self.board_area.shape
 
@@ -60,9 +60,8 @@ class MCTree():
                 other_y_next = np.random.randint(y)
                 other_b_next = np.random.randint(4)
 
-                i = np.random.randint(len(available_x))
-                x_next = available_x[i]
-                y_next = available_y[i]
+                i = np.random.randint(len(available_pos))
+                x_next, y_next = available_pos[i]
                 b_next = np.random.randint(4)
 
                 collision = (other_x_next==x_next) and (other_y_next==y_next)
@@ -71,19 +70,19 @@ class MCTree():
                     success = True
 
             # not record it to the tree by not recoding children
-            next_node = MCNode(self.chess_board, (x_next,y_next), b_next, parent=node)
+            next_node = MCNode(self.chess_board, (x_next,y_next), (other_x_next,other_y_next),b_next, parent=node)
             return next_node
 
         # check if it is end of game
         reach_end, tmp =node.check_close_area()
         while not reach_end:
-            available_x, available_y = tmp
-            next_node = _simulate_single(node, available_x, available_y)
+            available_pos = tmp
+            next_node = _simulate_single(node, available_pos)
             node = next_node
             reach_end, tmp =node.check_close_area()
 
-        area = tmp
-        return node, area
+        area, adv_area = tmp
+        return node, (area, adv_area)
 
 
     def backpopagation(self, tree_node):

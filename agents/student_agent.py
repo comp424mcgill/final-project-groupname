@@ -44,8 +44,7 @@ class StudentAgent(Agent):
         if self.tree == None:
             self.set_tree(chess_board, my_pos, adv_pos)
 
-        _, (available_x, available_y) = self.node.check_close_area(max_step=max_step, only_get_avil=True)
-        available_pos = [(x,y) for x,y in zip(available_x, available_y)]
+        _, available_pos = self.node.check_close_area(max_step=max_step, only_get_avail=True)
         if adv_pos in available_pos:
             available_pos.remove(adv_pos)
 
@@ -60,7 +59,7 @@ class StudentAgent(Agent):
 
 
     def set_tree(self, chess_board, my_pos, adv_pos):
-        root = MCNode(chess_board, my_pos)
+        root = MCNode(chess_board, my_pos, adv_pos)
         self.tree = MCTree(chess_board, root)
         self.node = self.tree.build_tree()
         
