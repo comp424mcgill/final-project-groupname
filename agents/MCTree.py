@@ -1,11 +1,7 @@
 
 import numpy as np
 import time
-from agents.agent import Agent
-from random_agent import RandomAgent
-# TODO:  do i have to use random agent as others
-from store import register_agent
-from MCNode import MCNode
+from agents.MCNode import MCNode
 
 
 class MCTree():

@@ -1,5 +1,5 @@
 
-from matplotlib.style import available
+
 import numpy as np
 from copy import deepcopy
 from agents.agent import Agent
@@ -9,7 +9,7 @@ class MCNode():
     '''
     class for Monte Carlo Tree node
     '''
-    def __init__(self,chess_board, coord, barrier, parent=None, depth=0):
+    def __init__(self,chess_board, coord, barrier='u', parent=None, depth=0):
         """
         Parameters
         ----------
@@ -57,7 +57,7 @@ class MCNode():
         return False
 
 
-    def check_close_area(self, max_step=0):
+    def check_close_area(self, max_step=0, only_get_avil=False):
         '''
         if reach end, return True and area of our player get
         else, return False and available coord we can reach
@@ -86,7 +86,7 @@ class MCNode():
                 if not board[x][y][2]: 
                     return False
                 y += 1  
-            return visited_map[x][y]==0 and 0<=x<board.shape[0] and 0<=y<board.shape[1]
+            return  0<=x<board.shape[0] and 0<=y<board.shape[1] and visited_map[x][y]==0
 
         def area_runner(visited_map, x, y, step_num):
             step_num += 1
@@ -105,10 +105,10 @@ class MCNode():
                 area += area_runner(visited_map, x, y+1, step_num)[0]
             return area, visited_map
 
-        area, visited_map = area_runner(board, visited_map, x, y,0)[0]
+        area, visited_map = area_runner(visited_map, x, y,0)
         available_x, available_y = np.where(visited_map==1)
         board_area = board.shape[0] * board.shape[1]
-        if area == board_area:
+        if area == board_area or only_get_avil:
             return False, (available_x, available_y)
         return True, area
 
@@ -143,3 +143,11 @@ class MCNode():
                 highest_score = child.score
                 highest_child = child
         return highest_child
+
+    def sort_children(self):
+        scores = []
+        for i in self.children:
+            score=i.success / i.visit +  np.sqrt( 2*np.log (self.visit) / i.visit)
+            scores += score
+        sorted_children = [x for _,x in sorted(zip(scores, self.children))]
+        return sorted_children

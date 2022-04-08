@@ -2,7 +2,9 @@
 from agents.agent import Agent
 from store import register_agent
 import sys
-
+from agents.MCNode import MCNode
+from agents.MCTree import MCTree
+import numpy as np
 
 @register_agent("student_agent")
 class StudentAgent(Agent):
@@ -14,6 +16,9 @@ class StudentAgent(Agent):
     def __init__(self):
         super(StudentAgent, self).__init__()
         self.name = "StudentAgent"
+        #self.step_number = 0
+        self.tree = None
+        self.node = None
         self.dir_map = {
             "u": 0,
             "r": 1,
@@ -36,5 +41,26 @@ class StudentAgent(Agent):
 
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
-        # dummy return
+        if self.tree == None:
+            self.set_tree(chess_board, my_pos, adv_pos)
+
+        _, (available_x, available_y) = self.node.check_close_area(max_step=max_step, only_get_avil=True)
+        available_pos = [(x,y) for x,y in zip(available_x, available_y)]
+        if adv_pos in available_pos:
+            available_pos.remove(adv_pos)
+
+        sorted_children = self.node.sort_children()
+        for c in sorted_children:
+            pos = c.coord
+            if pos in available_pos:
+                self.node = c
+                return pos, self.dir_map[c.barrier]
+
         return my_pos, self.dir_map["u"]
+
+
+    def set_tree(self, chess_board, my_pos, adv_pos):
+        root = MCNode(chess_board, my_pos)
+        self.tree = MCTree(chess_board, root)
+        self.node = self.tree.build_tree()
+        
