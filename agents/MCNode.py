@@ -16,7 +16,6 @@ class MCNode():
         visited: number of visiting
         success: number of visiting which our palyer success
         my_pos: coordinates of current state
-        barrier: array of boolean of lenth = 4
         """
         self.my_pos = my_pos
         self.adv_pos = adv_pos
@@ -27,6 +26,8 @@ class MCNode():
         self.visit = 0
         self.success = 0
         self.depth = depth
+        self.moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
+        self.opposites = {0: 2, 1: 3, 2: 0, 3: 1}
 
     def isLeaf(self):
         return (len(self.children) == 0)
@@ -37,25 +38,37 @@ class MCNode():
     def add_score(self, score): 
         self.success += score
 
-    def set_barrier(self, x, y, b):
+    '''def set_barrier(self, x, y, b):
         # same func as Tree
         if not 0<=b<=3:
             return False
-
+        
         if self.chess_board[x][y][b] == False:
             self.chess_board[x][y][b] = True
             # neighbor's wall
-            if b == 0 :
+            if b == 0 and y-1>0 :
                 self.chess_board[x][y-1][2] = True
-            elif b == 2 :
+            elif b == 2 and y+1<len(self.chess_board[0]):
                 self.chess_board[x][y+1][0] = True
-            elif b == 1 :
+            elif b == 1 and x+1<self.chess_board.shape[0]:
                 self.chess_board[x+1][y][3] = True 
-            else:
+            elif x-1>0:
                 self.chess_board[x-1][y][1] = True 
+            else:
+                return False
             return True
 
-        return False
+        return False'''
+    def set_barrier(self, r, c, dir):
+        # Set the barrier to True
+        self.chess_board[r, c, dir] = True
+        # Set the opposite barrier to True
+        move = self.moves[dir]
+        try:
+            self.chess_board[r + move[0], c + move[1], self.opposites[dir]] = True
+        except IndexError:
+            return None
+
 
 
     def check_close_area(self, max_step=0, only_get_avail=False):
@@ -107,7 +120,7 @@ class MCNode():
                 add, visited_map = area_runner(visited_map, x, y-1, step_num)
                 area += add
             if _is_valid_step(visited_map, x, y, 'd'):
-                add, visited_map += area_runner(visited_map, x, y+1, step_num)
+                add, visited_map = area_runner(visited_map, x, y+1, step_num)
                 area += add
             return area, visited_map
 
@@ -137,7 +150,7 @@ class MCNode():
             if x==self.adv_pos[0] and y==self.adv_pos[1]:
                 continue
             b = 0
-            while not self.set_barrier(x, y, b) and b<4:
+            while  b<4 and not self.set_barrier(x, y, b):
                 b += 1
             #TODO: adv_pos
             child = MCNode(self.chess_board, (x,y), self.adv_pos, b, parent=self, depth=self.depth+1)
@@ -153,14 +166,18 @@ class MCNode():
                 continue
             child_score = child.success/child.visit
             if child_score > highest_score:
-                highest_score = child.score
+                highest_score = child_score
                 highest_child = child
         return highest_child
 
-    def sort_children(self):
+    ''' def sort_children(self):
         scores = []
-        for i in self.children:
-            score=i.success / i.visit +  np.sqrt( 2*np.log (self.visit) / i.visit)
-            scores += score
-        sorted_children = [x for _,x in sorted(zip(scores, self.children), reverse=True)]
-        return sorted_children
+        children = self.children
+        for i in children:
+            if i.visit == 0:
+                scores += [0]
+            else:
+                score= i.success / i.visit +  np.sqrt( 2*np.log (self.visit) / i.visit)
+                scores += [score]
+        sorted_children = [x for _,x in sorted(zip(scores, children), reverse=True)]
+        return sorted_children'''

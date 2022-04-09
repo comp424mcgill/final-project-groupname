@@ -16,6 +16,7 @@ class StudentAgent(Agent):
     def __init__(self):
         super(StudentAgent, self).__init__()
         self.name = "StudentAgent"
+        self.autoplay = True
         #self.step_number = 0
         self.tree = None
         self.node = None
@@ -44,18 +45,15 @@ class StudentAgent(Agent):
         if self.tree == None:
             self.set_tree(chess_board, my_pos, adv_pos)
 
-        _, available_pos = self.node.check_close_area(max_step=max_step, only_get_avail=True)
+        '''_, available_pos = self.node.check_close_area(max_step=max_step, only_get_avail=True)
         if adv_pos in available_pos:
-            available_pos.remove(adv_pos)
+            available_pos.remove(adv_pos)'''
 
-        sorted_children = self.node.sort_children()
-        for c in sorted_children:
-            pos = c.coord
-            if pos in available_pos:
-                self.node = c
-                return pos, self.dir_map[c.barrier]
+        next = self.node.highest_child()
+        # if next.my_pos in available_pos:
+            #TODO
 
-        return my_pos, self.dir_map["u"]
+        return next.my_pos, self.dir_map[next.barrier]
 
 
     def set_tree(self, chess_board, my_pos, adv_pos):
