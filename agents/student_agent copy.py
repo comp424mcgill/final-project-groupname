@@ -5,7 +5,6 @@ import sys
 from agents.MCNode import MCNode
 from agents.MCTree import MCTree
 import numpy as np
-from copy import deepcopy
 
 @register_agent("student_agent")
 class StudentAgent(Agent):
@@ -43,37 +42,23 @@ class StudentAgent(Agent):
 
         Please check the sample implementation in agents/random_agent.py or agents/human_agent.py for more details.
         """
-        # Moves (Up, Right, Down, Left)
-        ori_pos = deepcopy(my_pos)
-        moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
-        steps = np.random.randint(0, max_step + 1)
+        if self.tree == None:
+            self.set_tree(chess_board, my_pos, adv_pos)
 
-        # Random Walk
-        for _ in range(steps):
-            r, c = my_pos
-            dir = np.random.randint(0, 4)
-            m_r, m_c = moves[dir]
-            my_pos = (r + m_r, c + m_c)
+        _, available_pos = self.node.check_close_area(max_step=max_step, only_get_avail=True)
+        if adv_pos in available_pos:
+            available_pos.remove(adv_pos)
+        children = self.node.children
 
-            # Special Case enclosed by Adversary
-            k = 0
-            while chess_board[r, c, dir] or my_pos == adv_pos:
-                k += 1
-                if k > 300:
-                    break
-                dir = np.random.randint(0, 4)
-                m_r, m_c = moves[dir]
-                my_pos = (r + m_r, c + m_c)
+        next = self.node.highest_child(children)
+        while not (next.my_pos in available_pos) and len(children)>0:
+            children.remove(next)
+            next = self.node.highest_child(children)
+        return next.my_pos, next.barrier
 
-            if k > 300:
-                my_pos = ori_pos
-                break
 
-        # Put Barrier
-        dir = np.random.randint(0, 4)
-        r, c = my_pos
-        while chess_board[r, c, dir]:
-            dir = np.random.randint(0, 4)
-
-        return my_pos, dir
+    def set_tree(self, chess_board, my_pos, adv_pos):
+        root = MCNode(chess_board, my_pos, adv_pos)
+        self.tree = MCTree(chess_board, root)
+        self.node = self.tree.build_tree()
         
