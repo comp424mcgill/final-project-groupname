@@ -16,26 +16,20 @@ class MCTree():
             """
             self.chess_board = chess_board
             self.root = root
+            self.moves = ((-1, 0), (0, 1), (1, 0), (0, -1))
+            self.opposites = {0: 2, 1: 3, 2: 0, 3: 1}
 
-    def set_barrier(self, x, y, b):
-        # same func as node
-        if not 0<=b<=3:
-            return False
+    def set_barrier(self, r, c, dir):
+        # Set the barrier to True
+        self.chess_board[r, c, dir] = True
+        # Set the opposite barrier to True
+        move = self.moves[dir]
+        try:
+            self.chess_board[r + move[0], c + move[1], self.opposites[dir]] = True
+        except IndexError:
+            return None
+        
 
-        if self.chess_board[x][y][b] == False:
-            self.chess_board[x][y][b] = True
-            # neighbor's wall
-            if b == 0 :
-                self.chess_board[x][y-1][2] = True
-            elif b == 2 :
-                self.chess_board[x][y+1][0] = True
-            elif b == 1 :
-                self.chess_board[x+1][y][3] = True 
-            else:
-                self.chess_board[x-1][y][1] = True 
-            return True
-
-        return False
 
     # READ THIS
     # as ppt9 p13, for current node we generate some steps with default policy, when we reach the end we record it by backpopa. 
@@ -53,7 +47,8 @@ class MCTree():
     def simulate(self, node):
         def _simulate_single(node, available_pos):
             success = False
-            x,y,_ = self.board_area.shape
+            x,y,_ = self.chess_board.shape
+            start_time = time.time()
 
             while not success:
                 other_x_next = np.random.randint(x)
@@ -68,6 +63,8 @@ class MCTree():
                 barrier_setted = (self.set_barrier(other_x_next,other_y_next,other_b_next)) and (self.set_barrier(x_next,y_next,b_next))
                 if not collision and barrier_setted:
                     success = True
+                if time.time() > start_time+1:
+                    break
 
             # not record it to the tree by not recoding children
             next_node = MCNode(self.chess_board, (x_next,y_next), (other_x_next,other_y_next),b_next, parent=node)
@@ -88,14 +85,14 @@ class MCTree():
     def backpopagation(self, tree_node):
         '''tree_node: starting node that stored in tree'''
         # TODO: this is not exactly 100% success
-        node, area = self.simulate(tree_node)
-        board_area = self.chess_board.shape[0] * self.chess_board.shape[1]
+        node, areas = self.simulate(tree_node)
+        my_area, adv_area = areas
         while node.parent != None:
             node = node.parent
             node.add_visit()
-            if area > (board_area/2):
+            if my_area > adv_area:
                 node.add_score(1)
-            elif area == (board_area/2):
+            elif my_area == adv_area:
                 node.add_score(.5)
         # this should end at root
 
@@ -130,7 +127,7 @@ class MCTree():
                 print('wuwu: search time exceeds')
                 return node
             node = node.highest_child()'''
-        # search -> node.highest_child() ???TODO
+        # search -> node.highest_child() 
         
             
 
