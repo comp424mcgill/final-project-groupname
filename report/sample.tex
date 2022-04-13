@@ -1,0 +1,116 @@
+\documentclass[twoside,11pt]{article}
+
+% Any additional packages needed should be included after jmlr2e.
+% Note that jmlr2e.sty includes epsfig, amssymb, natbib and graphicx,
+% and defines many common macros, such as 'proof' and 'example'.
+%
+% It also sets the bibliographystyle to plainnat; for more information on
+% natbib citation styles, see the natbib documentation, a copy of which
+% is archived at http://www.jmlr.org/format/natbib.pdf
+\usepackage{jmlr2e}
+% Definitions of handy macros can go here
+\usepackage{subfig}
+\newcommand{\dataset}{{\cal D}}
+\newcommand{\fracpartial}[2]{\frac{\partial #1}{\partial  #2}}
+
+% Heading arguments are {volume}{year}{pages}{submitted}{published}{author-full-names}
+
+% \jmlrheading{1}{2000}{1-48}{4/00}{10/00}{Marina Meil\u{a} and Michael I. Jordan}
+
+% Short headings should be running head and authors last names
+
+% \firstpageno{1}
+
+\begin{document}
+
+\title{COMP 424 Final Project with Monte Carlo Tree Search}
+\ShortHeadings{Final project COMP 424, McGill University}{}
+\author{author: Claire Yang (\texttt{260898597}) , Yunya Lu(\texttt{260895526}) \\ instructor: Jackie Cheung, Bogdan Mazoure\\}
+
+
+% \editor{Leslie Pack Kaelbling}
+
+\maketitle
+
+
+\begin{abstract}
+The project is designed to implement an intelligent student agent to play the Colosseum Survival game. Each turn, the players will go to a point on the chessboard to place a wall to make their areas as large as possible. We choose our step for each turn using the Monte Carlo Tree Search (MCTS) algorithm. According to the algorithm, we develop a Monte Carlo search tree with all nodes holding a possible game state at the beginning of the game, and use the tree so search for a step that is relatively advantageous to take. The result shows that our student agent beat most of the random opponents. The algorithm can be improved by searching for more than one node to avoid invalid steps, or by finding some prior rules to improve the efficiency and quality of the search tree.
+
+\end{abstract}
+\section{Introduction}
+In this project, we develop a student agent that can play the game Colosseum Survival automatically with a high winning rate. The game has two agents randoms with some initial barrier walls on a square board. Agents move one by one to a reachable coordinate on the board and choose one of the four directions(up, down, left, right) to put the barrier. A coordinate is said to be reachable if the agent's path to it is free of barriers and within a specified number of steps (one step means to change its coordinate by 1). Also, the adversary cannot be in that coordinate, and we cannot set walls in the direction that already has a barrier on it. The game ends if the two agents are entirely separated by the barriers into two parts of the board. Then calculate the area of the part of each agent. The agent with a larger part of the board wins. If the two agents' parts are of equal areas, that game will be recorded as a tie.
+
+Here we use the Monte Carlo tree search to decide the steps to take and barriers to set in the student agent. Monte Carlo tree search is a heuristic search algorithm for some decision processes \cite{2016Natur}. It can keep our agent in the best position to win the game.
+
+\section{Motivation}
+Colosseum Survival is mainly turn-based moving and placing barriers until the two players are completely separated on either side of the barrier. Due to the randomness of the initial position and the opponent's action, it is difficult to find the rules of each step. Therefore we chose to generate a large number of simulated game steps to find the relative optimal solution as our rule. It happens that Monte Carlo Tree Search is suitable for such a large search space.
+
+It is also worth mentioning that the game's mechanics are similar to Go--- a game in which Monte Carlo tree search is heavily used as its artificial intelligence algorithm.\cite{mctsGo2008}
+
+\section{Technical Approaches}
+The Monte Carlo Tree Search is mainly to build a tree with random situations and search for the most advantageous tree nodes. 
+
+For the tree node, we used the \texttt{MCNode.py}, which contains a \texttt{MCNode} class to record the state of the game after every move and barrier-setting. 
+
+To build the Tree with the node, we develop a \texttt{MCTree} class inside the \texttt{MCTree.py}. The tree-building method separates the method into four approaches: selection, expansion, simulation, and backpropagation, which you can find detailed information in Section \ref{sec:Theoretical_Background}.
+At the start of each game, we generate a root node for the initial state, which we select as the current node. For the current node, we check if it is a leaf. If it is a leaf and the game is not finished, we call expansion to generate children for the current node. For each new child, we simulated the entire game depending on its state to see the result. Then we do backpropagation to record the result on the new child node, its parent's parent, and so on, until we go back to the root. Then we select the best among all the new children to be our next current node, depending on the weights of the node, where the weight is defined in equation (\ref{eqn:weight}). Repeat these approaches until we cannot expand any children or the run time exceed a limit.
+
+After completing the construction of the tree, we can start our search for the next step to take. We are still looking for the node with the highest weight in each level of depth of the tree. The weight is defined to be:
+\begin{equation}
+\label{eqn:weight}
+Q^{\oplus}(s,a)=Q(s,a)+c\sqrt{ \frac{log(n(s))}{n(s,a)} },
+\end{equation}
+\(n(s)\) is the number of visits;\\
+\(n(s,a)\) is the number of visits of the parent node;\\
+\(Q(s,a)=\frac{score}{n(s)}\) is the empirical weight of the node, \\where \(score=number\_of\_ wins + 0.5*number\_of\_ties\);\\
+\(c\) is an constant, for example here we choose \(c=\sqrt{2}\) .\\
+
+\section{Theoretical Background}
+ \label{sec:Theoretical_Background}
+% add ref to bib, including the website
+% deep intro mcts, go further than work, such as its principles...
+The four approaches for building the Monte Carlo Tree is:\cite{Intro2019}
+\begin{enumerate}
+\item Selection: In the beginning, the current node is our root node. Then select the most optimal child nodes with tree policy as our next current node until a leaf node is reached.
+\item Expansion: If we reach the leaf node, generate some children nodes randomly.
+\item Simulation: Simulate the game after the node expanded randomly, by default policy, until we reach the end of the game and get a result.
+\item Backpropagation: Use the result from the simulation to update the information of the node we expanded, and its recursive parent node.
+\end{enumerate}
+
+Tree policy here is to choose our best child with weight function (\ref{eqn:weight}). The weight function can help maintain a proper balance between the exploration (not well-tested actions) and exploitation (the best actions identified so far).\cite{DBLP2021}
+
+The default policy is more casual. Here we just randomly generate steps and barriers.
+
+\section{Evaluation}
+% A summary of pros and cons
+\subsection{Advantages}
+\begin{itemize}
+\item The search can be very fast after the tree is built. As in each level, only one node (highest weight) has non-empty children nodes, which is because we only select one best child before expansion. The selection with only one node also saves memory spaces.
+\item No prior knowledge (e.g., explicit evaluation function) is required, because we generate and simulate tree nodes freely by default policy.
+\item In most cases, we can find a position of relative advantage that not only has a greater chance of winning, but also takes into account the probability that the node is reachable. Since both of these are taken care of by our weight function.
+\end{itemize}
+
+\subsection{Disadvantage}
+% expected failure modes, or weaknesses of your program.
+As the depth and number of children nodes are limited, our sample cannot cover all situations. 
+\begin{itemize}
+\item As we cannot predict what our opponent will do, maybe after a few rounds, our best child in the tree is out of its optimal position. 
+\item More seriously, our next step may no longer be valid. For example, our opponent might take our next step.
+\item In some extreme games, the number of turns might exceed the depth of the tree. This will deprive us of options in the part beyond the depth of the tree.
+\item We can only find our relative optimal step among the data we generate, which might not be the absolute best position in the whole game.
+\end{itemize}
+
+\section{Improvements}
+As mentioned in the disadvantage part, the following steps our algorithm find is not always valid. This can be improved by returning a list of children nodes whose weight is sorted from largest to smallest. Thus if our best child is not reachable, we can still go to the next best position.
+
+Also, we can guess some prior rules instead of generating children randomly in expansion, like taking positions in the center of the board first. This can speed up the building of the tree and improve the empirical weights (\(Q(s,a)\)) of the sample node, as we are closer to the more promising part in the early part of the game.
+
+\section{Conclusion}
+The student agent we developed with Monte Carlo Tree Search can defeat most random agents. The advantage of our algorithm is that it searches for the next step quickly and does not take up too much memory. Also, it does not need to know the game's rules to gain an advantage. However, due to the limitation of the sample size of the tree, we cannot cover all situations. Thus there are still going to be some losses from time to time. We came up with two ways to improve: one is to make the search process return more than one possible step, and the other is to add some human intelligence, like preempting the middle of the board.
+
+
+% \vskip 0.2in
+%\newpage
+\bibliography{sample}
+
+\end{document}
